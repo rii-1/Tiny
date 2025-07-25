@@ -1,9 +1,11 @@
 # Tiny Tapeout project information
 project:
-  title:        ""      # Project title
-  author:       ""      # Your name
-  discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  ""      # One line description of what your project does
+  title:        "spike_encoder"      # Project title
+  author:       "Riya_soni & Anoushka_Tripathi"      # Your name
+  discord:      "riya_soni_83376"      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
+  description:  "This guide details the design, simulation, and submission process for a unique Spike Encoder peripheral for the
+TTSKY25a RISC-V Microcontroller Challenge. The Spike Encoder converts 8-bit input values into spike trains,
+enabling neuromorphic-style processing in a tiny peripheral."      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     64000000  # Clock frequency in Hz (or 0 if not applicable)
 
@@ -24,6 +26,7 @@ project:
     - "spi/reclocking.sv"
     - "spi/spi_reg.sv"
     - "spi/synchronizer.sv"
+    - "spike.v"
 
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
