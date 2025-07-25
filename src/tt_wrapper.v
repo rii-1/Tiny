@@ -35,12 +35,12 @@ module tt_um_tqv_peripheral_harness (
 
   // The peripheral under test.
   // **** Change the module name from tqvp_example to match your peripheral. ****
-  tqvp_example user_peripheral(
+  spike user_peripheral(
     .clk(clk),
     .rst_n(rst_reg_n),
     .ui_in(ui_in_sync),
+    .address(address), // Using spike output as address
     .uo_out(uo_out),
-    .address(address),
     .data_write(data_valid),
     .data_in(data_in),
     .data_out(data_out)
