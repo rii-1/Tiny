@@ -32,7 +32,8 @@ enabling neuromorphic-style processing in a tiny peripheral."      # One line de
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
 pinout:
-  # Inputs
+pinout:
+  # Inputs (not used in current design)
   ui[0]: ""
   ui[1]: ""
   ui[2]: ""
@@ -43,16 +44,16 @@ pinout:
   ui[7]: ""
 
   # Outputs
-  uo[0]: ""
-  uo[1]: ""
-  uo[2]: ""
-  uo[3]: ""
-  uo[4]: ""
-  uo[5]: ""
-  uo[6]: ""
-  uo[7]: ""
+  uo[0]: "Spike output (1 when spike detected)"
+  uo[1]: "Spike count bit 1"
+  uo[2]: "Spike count bit 2"
+  uo[3]: "Spike count bit 3"
+  uo[4]: "Spike count bit 4"
+  uo[5]: "Spike count bit 5"
+  uo[6]: "Spike count bit 6"
+  uo[7]: "Spike count bit 7"
 
-  # Bidirectional pins
+  # Bidirectional pins (SPI interface)
   uio[0]: ""
   uio[1]: ""
   uio[2]: ""
