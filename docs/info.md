@@ -15,12 +15,13 @@ Explain what your peripheral does and how it works
 
 Document the registers that are used to interact with your peripheral
 
-| Address | Name      | Access | Description                                               |
-| ------- | --------- | ------ | --------------------------------------------------------- |
-| 0x00    | INPUT     | W      | Input data value to be spike-encoded                      |
-| 0x01    | THRESHOLD | W      | Threshold for spike generation (compare against INPUT)    |
-| 0x02    | CONTROL   | W      | Bit0 = Enable, Bit1 = Continuous mode                     |
-| 0x03    | STATUS    | R      | Bit0 = Spike active (1 when spike generated, 0 otherwise) |
+| Address | Name      | Access | Description                                                                  |
+| ------- | --------- | ------ | ---------------------------------------------------------------------------- |
+| 0x00    | PIXEL     | W/R    | Current pixel intensity (write new pixel value; read back last written)      |
+| 0x01    | THRESHOLD | W/R    | Threshold for edge detection (default 20)                                    |
+| 0x02    | SPIKE     | R      | Bit0 = Spike detected (1 = spike event, 0 = no spike)                        |
+| 0x03    | COUNT     | R      | Spike count (increments each time a spike is detected; resets on system rst) |
+
 
 ## How to test
 
