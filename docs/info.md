@@ -31,12 +31,12 @@ Document the registers that are used to interact with your peripheral
 
 Run the testbench:
 
-1. Make all
+1. Make all :
 Inspect tb.vcd waveform in GTKWave to verify:
 Spike output pulses when pixel changes exceed the threshold.
 COUNT register increments correctly.
 
-2. On silicon
+2. On silicon :
 Write pixel data via SPI register 0x00.
 Set threshold via SPI register 0x01.
 Read status (0x02) to check for spike events.
