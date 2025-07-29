@@ -1,20 +1,11 @@
-/*
- * Spike Module Peripheral
- * Converts input data to spike-encoded address and data_out
- */
-
 `default_nettype none
-/*
- * Spike Encoder Peripheral Module
- * Rewritten for integration with TinyQV peripheral harness
- */
 
 module spike (
   input wire clk,
   input wire rst_n,
 
-  input wire [7:0] ui_in,      // External inputs if needed
-  output reg [7:0] uo_out,     // Outputs
+  input wire [7:0] ui_in,      // Pixel intensity input
+  output reg [7:0] uo_out,     // Spike output + spike count MSBs
 
   input wire [3:0] address,    // Peripheral register address
   input wire data_write,       // Write strobe
@@ -22,47 +13,70 @@ module spike (
   output reg [7:0] data_out    // Data to read
 );
 
-  // Internal register to store input value
-  reg [7:0] input_reg;
-  reg spike_reg;
+  // Registers
+  reg [7:0] pixel_reg;        // Current pixel value
+  reg [7:0] prev_pixel_reg;   // Previous pixel value
+  reg [7:0] threshold_reg;    // Edge detection threshold
+  reg spike_reg;              // Spike flag
+  reg [7:0] spike_count;      // Count of detected spikes
 
-  // Example: address map
-  localparam ADDR_INPUT = 4'h0;
-  localparam ADDR_SPIKE = 4'h1;
+  // Address map
+  localparam ADDR_PIXEL     = 4'h0;
+  localparam ADDR_THRESHOLD = 4'h1;
+  localparam ADDR_SPIKE     = 4'h2;
+  localparam ADDR_COUNT     = 4'h3;
+
+  // Compute absolute difference
+  wire [7:0] diff = (pixel_reg > prev_pixel_reg) ?
+                    (pixel_reg - prev_pixel_reg) :
+                    (prev_pixel_reg - pixel_reg);
 
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      input_reg <= 8'd0;
-      spike_reg <= 1'b0;
-      uo_out    <= 8'd0;
+      pixel_reg      <= 8'd0;
+      prev_pixel_reg <= 8'd0;
+      threshold_reg  <= 8'd20; // Default threshold
+      spike_reg      <= 1'b0;
+      spike_count    <= 8'd0;
+      uo_out         <= 8'd0;
     end else begin
       // Write to registers
       if (data_write) begin
         case (address)
-          ADDR_INPUT: input_reg <= data_in;
+          ADDR_PIXEL:     pixel_reg <= data_in;      // Input pixel
+          ADDR_THRESHOLD: threshold_reg <= data_in;  // Set threshold
           default: ;
         endcase
       end
 
-      // Spike encoding logic (simple threshold example)
-      if (input_reg >=8'd100)
+      // Save previous pixel
+      prev_pixel_reg <= pixel_reg;
+
+      // Edge detection: compare difference to threshold
+      if (diff >= threshold_reg)
         spike_reg <= 1'b1;
       else
         spike_reg <= 1'b0;
 
-      // Drive uo_out[0] as spike output
-      uo_out[0] <= spike_reg;
+      // Count spikes
+      if (spike_reg)
+        spike_count <= spike_count + 1;
+
+      // Output: spike on bit 0, spike count on bits [7:1]
+      uo_out[0]   <= spike_reg;
+      uo_out[7:1] <= spike_count[7:1];
     end
   end
 
-  // Read from registers
+  // Readback logic
   always @(*) begin
     case (address)
-      ADDR_INPUT: data_out = input_reg;
-      ADDR_SPIKE: data_out = {7'd0, spike_reg};
-      default:    data_out = 8'd0;
+      ADDR_PIXEL:     data_out = pixel_reg;
+      ADDR_THRESHOLD: data_out = threshold_reg;
+      ADDR_SPIKE:     data_out = {7'd0, spike_reg};
+      ADDR_COUNT:     data_out = spike_count;
+      default:        data_out = 8'd0;
     endcase
   end
 
 endmodule
-
