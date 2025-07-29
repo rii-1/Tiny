@@ -8,43 +8,56 @@ from cocotb.triggers import ClockCycles
 from tqv import TinyQV
 
 @cocotb.test()
-async def test_project(dut):
-    dut._log.info("Start")
+async def test_spike_harness(dut):
+    dut._log.info("=== Start SPI-based Spike Peripheral Test ===")
 
-    # Set the clock period to 100 ns (10 MHz)
+    # 1. Create clock (10 MHz -> 100 ns period)
     clock = Clock(dut.clk, 100, units="ns")
     cocotb.start_soon(clock.start())
 
-    # Initialize TinyQV for register read/write
+    # 2. Initialize TinyQV helper
     tqv = TinyQV(dut)
 
-    # Reset
+    # 3. Reset DUT
     await tqv.reset()
-    dut._log.info("Reset done")
+    dut._log.info("Reset complete")
 
-    # Write a value to register 0
-    await tqv.write_reg(0, 100)
-    read_val = await tqv.read_reg(0)
-    dut._log.info(f"Register 0 read back: {read_val}")
-    assert read_val == 100, "Register write/read failed"
+    # -------------------------
+    # Test sequence starts here
+    # -------------------------
 
-    # Wait for spike output to reflect input (with sync delay)
-    await ClockCycles(dut.clk, 3)
+    # 4. Configure threshold register (ADDR=1)
+    threshold = 10
+    await tqv.write_reg(1, threshold)
+    read_thresh = await tqv.read_reg(1)
+    assert read_thresh == threshold, f"Threshold mismatch: got {read_thresh}"
 
-    # Check spike output
-    spike_out = dut.uo_out.value & 0x1
-    dut._log.info(f"Spike output: {spike_out}")
+    # 5. Apply pixel sequence to register 0 (ADDR=0)
+    pixels = [5, 20, 15, 35, 50, 40]   # simulating varying intensities
+    expected_spikes = 0
+    prev_pixel = 0
 
-    # Replace with your logic if spike is threshold-based
-    assert spike_out in (0,1), "Spike output must be 0 or 1"
+    for px in pixels:
+        await tqv.write_reg(0, px)      # write pixel input
+        await ClockCycles(dut.clk, 2)   # wait for processing
+        if abs(px - prev_pixel) >= threshold:
+            expected_spikes += 1
+        prev_pixel = px
 
-    # Further tests can be added based on thresholding behavior:
-    # For example, set low register value and check no spike
-    await tqv.write_reg(0, 1)
-    await ClockCycles(dut.clk, 3)
-    spike_out_low = dut.uo_out.value & 0x1
-    dut._log.info(f"Spike output for low input: {spike_out_low}")
-    assert spike_out_low == 0, "Spike output should be 0 for low input"
+    # 6. Read spike count (ADDR=3)
+    count_val = await tqv.read_reg(3)
+    dut._log.info(f"Spike count = {count_val}, Expected = {expected_spikes}")
+    assert count_val == expected_spikes, "Spike count mismatch"
 
-    dut._log.info("Test completed successfully")
+    # 7. Check spike flag (ADDR=2)
+    spike_flag = await tqv.read_reg(2)
+    assert spike_flag in (0, 1), f"Invalid spike flag: {spike_flag}"
 
+    # 8. Check uo_out: bit0 = spike, bits7:1 = spike count MSBs
+    uo_val = dut.uo_out.value.integer
+    dut._log.info(f"uo_out = {uo_val:08b}")
+
+    # At least validate spike bit is valid
+    assert (uo_val & 1) in (0, 1), "uo_out[0] must be 0 or 1"
+
+    dut._log.info("=== Spike Peripheral Test Passed ===")
